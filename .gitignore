@@ -1,0 +1,4 @@
+*.gguf
+*.zip
+.DS_Store
+.cache
