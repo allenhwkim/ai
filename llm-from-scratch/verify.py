@@ -26,14 +26,13 @@ logits = logits[:, -1, :]
 
 # Print out 10 words that has the higher possiblity followed by "Dobby is"
 top_logits, top_indices = torch.topk(logits, 10) 
-for p, i in zip(top_logits.squeeze(0).tolist(), top_indices.squeeze(0).tolist()):
-    print(f"{p:.2f}\t {i}\t {tokenizer.decode([i])}")
+# for p, i in zip(top_logits.squeeze(0).tolist(), top_indices.squeeze(0).tolist()):
+#    print(f"{p:.2f}\t {i}\t {tokenizer.decode([i])}")
 
 # Print out the word that has the highest possiblity
 idx_next = torch.argmax(logits, dim=-1, keepdim=True)
 flat = idx_next.squeeze(0) 
 out = tokenizer.decode(flat.tolist()) 
-print(out)
  
 def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=None, eos_id=None):
 

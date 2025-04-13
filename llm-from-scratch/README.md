@@ -15,6 +15,9 @@ LLM from Scratch (Harry Potter Books)
     │   ├── GPTModel.py        # defines the model architecture
     │   └── train_loader.py    # loads & processes cleaned data
     └── Run: python train.py   # trains using cleaned_harry-potter-02.txt
+
+└── Step 4: Run the result
+    └── Run: python verify.py
 ```
 
 ## Download harry-potter-02.txt
