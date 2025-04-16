@@ -1,6 +1,8 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
+  GetPromptRequestSchema,
+  ListPromptsRequestSchema,
   ListResourcesRequestSchema,
   ListResourceTemplatesRequestSchema,
   ReadResourceRequestSchema,
@@ -14,6 +16,7 @@ const server = new Server(
   },
   {
     capabilities: {
+      prompts: {},
       resources: {}, // Enable resources
     },
   }
@@ -73,6 +76,69 @@ server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
       },
     ],
   };
+});
+
+// Prompts
+server.setRequestHandler(ListPromptsRequestSchema, () => {
+  return {
+    prompts: [
+      {
+        name: "create-greeting",
+        description: "Generate a customized greeting message",
+        arguments: [
+          {
+            name: "name",
+            description: "Name of the person to greet",
+            required: true,
+          },
+          {
+            name: "style",
+            description: "The style of greeting, such a formal, excited, or casual. If not specified casual will be used"
+          }
+        ],
+      }
+    ]
+  }
+});
+
+var promptHandlers = {
+  "create-greeting": ({ name='', style = "casual" }) => {
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Please generate a greeting in ${style} style to ${name}.`,
+          },
+        },
+      ],
+    };
+  },
+};
+
+server.setRequestHandler(GetPromptRequestSchema, (request) => {
+  const { name, arguments: args } = request.params;
+
+  const promptHandlers = {
+    "create-greeting": ({ name, style = "casual" }: { name: string, style?: string }) => {
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `Please generate a greeting in ${style} style to ${name}.`,
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const promptHandler = promptHandlers[name as keyof typeof promptHandlers];
+  if (promptHandler) return promptHandler(args as { name: string, style?: string });
+  throw new Error("Prompt not found");
 });
 
 // Start server using stdio transport
