@@ -7,11 +7,16 @@ import {
 
 // Initialize server with resource capabilities
 const server = new Server(
-  { name: "hello-mcp", version: "1.0.0", },
-  { capabilities: { resources: {}, }, // Enable resources
+  {
+    name: "hello-mcp",
+    version: "1.0.0",
+  },
+  {
+    capabilities: {
+      resources: {}, // Enable resources
+    },
   }
 );
-
 // List available resources when clients request them
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   return {
@@ -39,11 +44,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   }
   throw new Error("Resource not found");
 });
-
 // Start server using stdio transport
 const transport = new StdioServerTransport();
-server.connect(transport).then(_ => {
-  console.info(JSON.stringify({
-    jsonrpc: '2.0', method: 'log', params : {message: 'Server running....'}
-  }));
-});
+await server.connect(transport);
+console.info('{"jsonrpc": "2.0", "method": "log", "params": { "message": "Server running..." }}');
