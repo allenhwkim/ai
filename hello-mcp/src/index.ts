@@ -2,6 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
@@ -42,8 +43,38 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       ],
     };
   }
+
+  const greetingExp = /^greetings:\/\/(.+)$/;
+  const greetingMatch = request.params.uri.match(greetingExp);
+  if (greetingMatch) {
+    const name = decodeURIComponent(greetingMatch[1]);
+    return {
+        contents: [
+        {
+            uri: request.params.uri,
+            text: `Hello, ${name}! Welcome to MCP.`,
+        },
+      ],
+    };
+  }
+
   throw new Error("Resource not found");
 });
+
+// Resource Templates
+server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
+  return {
+    resourceTemplates: [
+      {
+        uriTemplate: 'greetings://{name}',
+        name: 'Personal Greeting',
+        description: 'A personalized greeting message',
+        mimeType: 'text/plain',
+      },
+    ],
+  };
+});
+
 // Start server using stdio transport
 const transport = new StdioServerTransport();
 await server.connect(transport);
