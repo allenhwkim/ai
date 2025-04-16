@@ -1,10 +1,12 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
+  CallToolRequestSchema,
   GetPromptRequestSchema,
   ListPromptsRequestSchema,
   ListResourcesRequestSchema,
   ListResourceTemplatesRequestSchema,
+  ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
@@ -18,6 +20,7 @@ const server = new Server(
     capabilities: {
       prompts: {},
       resources: {}, // Enable resources
+      tools: {},
     },
   }
 );
@@ -101,22 +104,6 @@ server.setRequestHandler(ListPromptsRequestSchema, () => {
   }
 });
 
-var promptHandlers = {
-  "create-greeting": ({ name='', style = "casual" }) => {
-    return {
-      messages: [
-        {
-          role: "user",
-          content: {
-            type: "text",
-            text: `Please generate a greeting in ${style} style to ${name}.`,
-          },
-        },
-      ],
-    };
-  },
-};
-
 server.setRequestHandler(GetPromptRequestSchema, (request) => {
   const { name, arguments: args } = request.params;
 
@@ -139,6 +126,85 @@ server.setRequestHandler(GetPromptRequestSchema, (request) => {
   const promptHandler = promptHandlers[name as keyof typeof promptHandlers];
   if (promptHandler) return promptHandler(args as { name: string, style?: string });
   throw new Error("Prompt not found");
+});
+
+// tools 
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: 'create-message',
+        description: 'Generate a custom message with various options',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            messageType: {
+              type: 'string',
+              enum: ['greeting', 'farewell', 'thank-you'] ,
+              description: 'Type of message to generate',
+            },
+            recipient: {
+              type: 'string',
+              description: 'Name of the person to address',
+            },
+            tone: {
+              type: 'string',
+              enum: ['formal', 'casual', 'playful'],
+              description: 'Tone of the message',
+            },
+          },
+          required: ['messageType', 'recipient'],
+        },
+      }
+    ],
+  }
+});
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+
+  const { name, arguments: params } = request.params ?? {};
+  if (name === 'create-message') {
+    const handler = (args: { messageType: string; recipient: string; tone?: string; }) => {
+        if (!args.messageType) throw new Error("Must provide a message type.");
+        if (!args.recipient) throw new Error("Must provide a recipient.");
+        const { messageType, recipient } = args;
+        const tone = args.tone || "casual";
+        const messageFns = {
+          greeting: {
+            formal: (recipient: string) => `Dear ${recipient}, I hope this message finds you well`,
+            playful: (recipient: string) => `Hey hey ${recipient}! 🎉 What's shakin'?`,
+            casual: (recipient: string) => `Hi ${recipient}! How are you?`,
+          },
+          farewell: {
+            formal: (recipient: string) => `Best regards, ${recipient}. Until we meet again.`,
+            playful: (recipient: string) => `Catch you later, ${recipient}! 👋 Stay awesome!`,
+            casual: (recipient: string) => `Goodbye ${recipient}, take care!`,
+          },
+          "thank-you": {
+            formal: (recipient: string) => `Dear ${recipient}, I sincerely appreciate your assistance.`,
+            playful: (recipient: string) => `You're the absolute best, ${recipient}! 🌟 Thanks a million!`,
+            casual: (recipient: string) => `Thanks so much, ${recipient}! Really appreciate it!`,
+          },
+        } as any;
+        const func = messageFns[messageType][tone];
+      
+        if (func) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: func(recipient),
+              },
+            ],
+          };
+        }
+
+        throw new Error( `Invalid message type of tone`);
+    };
+    return handler(...[params] as Parameters<typeof handler>)
+  } else {
+    throw new Error('Tool not found');
+  }
 });
 
 // Start server using stdio transport
