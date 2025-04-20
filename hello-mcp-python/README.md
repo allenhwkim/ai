@@ -27,9 +27,15 @@ $ # append the following to ~/.zshrc
 export PATH=$HOME/.local/bin:.venv/bin:$PATH 
 ```
 
-## Run
+## Run hello mcp
 ```
 $ mcp dev server.py # to test with MCP inspector
+```
+
+## Run leave-manager 
+```
+$ mcp dev leave-manager.py # test with MCP inspector
+$ mcp install main.py
 ```
 
 

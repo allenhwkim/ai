@@ -1,5 +1,6 @@
 {
   "python.analysis.extraPaths": [
-    "./hello-mcp-python/.venv/lib/python3.13/site-packages"
+    "./hello-mcp-python/.venv/lib/python3.13/site-packages",
+    "./mcp-youtube/.venv/lib/python3.13/site-packages"
   ]
 }
