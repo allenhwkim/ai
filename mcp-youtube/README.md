@@ -1,28 +1,23 @@
-# mcp + youtube + Claude
-
+Install packages
 ```
-$ uv add "mcp[cli]"
-$ mcp dev main.py # to test with MCP inspector
-$ mcp install main. # to install MCP to Claude desktop
-```
-After install your Claude `claude_desktop_config.json` will have this
-```
-{
-  "mcpServers": {
-    ...
-    "YouTube Transcript Extractor": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "mcp[cli]",
-        "--with",
-        "youtube-transcript-api>=0.6.2",
-        "mcp",
-      ]
-    }
-  }
-}
+$ uv sync
+$ source .venv/bin/activateDefine mcp
 ```
 
-![alt text](images/claude.png)
+Run mcp server
+```
+$ uv run mcp_server.py
+$ curl -X POST http://127.0.0.1:8000/tools/get_youtube_transcript --json '{"video_url": "https://www.youtube.com/watch?v=_blFagKJhks"}'
+```
+
+Run LLM server
+```
+$ uv run llm_server.py
+$ curl -X POST http://localhost:3000/chat --json '{"prompt": "How are you?"}'
+$ curl -X POST http://localhost:3000/chat --json '{"prompt": "Summarize https://youtube.com/watch?v=dQw4w9WgXcQ"}'
+```
+
+Call llm server from index.html
+```
+$ http-server .
+```
