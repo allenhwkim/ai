@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import torchviz
 
 """
-Dataset -> DataLoader -> Model -> Loss Function -> Optimizer -> Training Loop
+DDMLOT (Dataset -> DataLoader -> Model -> Loss Function -> Optimizer -> Training Loop)
 """
 class RegressionDataset(TensorDataset):
     def __init__(self, x, y):
