@@ -1,0 +1,12 @@
+scikit-learn
+xgboost
+pandas
+mcp[cli]
+pillow
+torch
+numpy
+tiktoken
+fastapi
+pydantic
+uvicorn
+mcp
