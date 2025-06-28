@@ -1,17 +1,13 @@
 """
-This code shows how to fit a straight line to noisy data using PyTorch's
-deep learning tools, following the standard pipeline for supervised learning.
-It uses mini-batch SGD for optimization.
+This code fits a linear regression model to predict miles per gallon (mpg)
+based on horsepower using PyTorch with data from Kagglehub. 
 
 Split data into three sets:
-- Training set: Used to fit (train) the model’s parameters.
-- Validation set: Used to tune hyperparameters and monitor model performance
-during training (e.g., for early stopping or model selection). 
-  The model does not "see" this data during training.
-- Test set: Used only once, after all training and tuning, 
-  to evaluate the final model’s performance.
-  This gives an unbiased estimate of how the model will perform on new, 
-  unseen data.
+- Training set: Used to fit (train) the model's parameters.
+- Validation set: Used to tune hyperparameters and monitor model performance during training
+  for early stopping or model selection.  The model does not "see" this data during training.
+- Test set: Used only once, after all training and tuning to evaluate the final model's performance.
+  This gives an unbiased estimate of how the model will perform on new, unseen data.
 """
 # brew install graphviz
 import torch
@@ -20,8 +16,10 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import matplotlib.pyplot as plt
-import torchviz
 from torch.utils.data import random_split
+import altair as alt
+import pandas as pd
+import kagglehub
 
 """
 DDMLOT (Dataset -> DataLoader -> Model -> Loss Function -> Optimizer -> Training Loop)
@@ -38,14 +36,15 @@ class RegressionDataset(TensorDataset):
     def __getitem__(self, index):
         return self.x[index], self.y[index]
 
-# x = [-1.5, -0.8, 0.1, 0.9, 1.7]
-# y = [0.3, -0.3, 0.5, 1.8, 1.5]
-x = np.linspace(-2, 2, 500)
-# y = ax + b + noise. x.shape is (500,)
-y = 0.8 * x + 0.7 + np.random.normal(0, 0.7, size=x.shape)  
+path = kagglehub.dataset_download("jayhingrajiya/auto-mpg-dataset-miles-per-gallon")
+data = pd.read_csv(path + "/auto.csv")
+data['horsepower'] = pd.to_numeric(data['horsepower'], errors='coerce')
+data = data.dropna(subset=['horsepower', 'mpg'])  # Add this line
 
-x_numpy = np.array(x, dtype=np.float32)
-y_numpy = np.array(y, dtype=np.float32)
+x_numpy = data['horsepower'].values.astype(np.float32)
+# When input values are large, the gradients and parameter updates become huge, causing instability and overflow.
+x_numpy = (x_numpy - x_numpy.mean()) / x_numpy.std()  # Important! Normalize the feature
+y_numpy = data['mpg'].values.astype(np.float32)
 
 x_tensor = torch.from_numpy(x_numpy).unsqueeze(1)
 y_tensor = torch.from_numpy(y_numpy).unsqueeze(1)
@@ -61,7 +60,9 @@ val_size = int(0.15 * total_size)
 test_size = total_size - train_size - val_size
 
 train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
-
+print(f"Dataset sizes: Train={len(train_dataset)}, Val={len(val_dataset)}, Test={len(test_dataset)}")
+# print train_dataset, val_dataset, test_dataset
+print(f"Train dataset: {train_dataset}\nValidation dataset: {val_dataset}\nTest dataset: {test_dataset}")
 
 # Dataset -> DataLoader
 # batch_size = len(dataset)
@@ -73,7 +74,7 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 # Datasset -> Dataloader -> Model
 class LinearRegressionModel(nn.Module):
-    def __init__(self, initial_weight=-10.0, initial_bias=10.0):
+    def __init__(self, initial_weight=-10.0, initial_bias=50.0):
         super().__init__()
 
         # Trainable parameters (weights)
@@ -100,7 +101,6 @@ optimizer = optim.SGD(model.parameters(), lr=0.1)  # Stochastic Gradient Descent
 num_epochs = 100
 train_losses = []
 val_losses = []
-test_losses = []
 
 for epoch in range(num_epochs):
     for x_inputs, y_targets in train_loader:
@@ -113,36 +113,35 @@ for epoch in range(num_epochs):
     
     # Validation loss
     model.eval()  # Set model to evaluation mode
-    val_loss = 0.0
     with torch.no_grad():
-        for x_val, y_val in val_loader:
-            y_val_preds = model(x_val)
-            val_loss += criterion(y_val_preds, y_val).item()
-    val_loss /= len(val_loader)  # Average validation loss
-    val_losses.append(val_loss)
+        for x_inputs, y_targets in val_loader:
+            y_preds = model(x_inputs)
+            val_loss = criterion(y_preds, y_targets)
+            val_losses.append(val_loss.item())  # Store validation loss for plotting
 
     # print weighg, bias and loss every 10 epochs
     if epoch % 10 == 0:
         print(f"Epoch {epoch}: Weight = {model.weight.item():.4f}, Bias = {model.bias.item():.4f}, "
             f"Train Loss = {loss.item():.4f}, Val Loss = {val_loss:.4f}")
 
+print(f"Val Loss: {val_loss:.4f}, val_losses: {val_losses}")
+
 # Evaluate on test set
 model.eval()  # Set model to evaluation mode
-test_loss = 0.0
+test_losses = []
 with torch.no_grad():
-    for x_test, y_test in test_loader:
-        y_test_preds = model(x_test)
-        test_loss += criterion(y_test_preds, y_test).item()
-test_loss /= len(test_loader)  # Average test loss
-test_losses.append(test_loss)
-print(f"Test Loss: {test_loss:.4f}")
+    for x_inputs, y_targets in test_loader:
+        y_preds = model(x_inputs)
+        test_loss = criterion(y_preds, y_targets).item()
+        test_losses.append(test_loss)  # Store test loss for plotting
+print(f"Test Loss: {test_loss:.4f}, test_losses: {test_losses}")
 
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
 plt.plot(train_losses, label='Train Loss')
-plt.plot(range(1, len(val_losses) + 1), val_losses, label='Validation Loss')
-plt.plot(range(1, len(test_losses) + 1), test_losses, label='Test Loss')
-plt.xlabel('Epoch' if len(train_losses) == len(val_losses) else 'Iteration/Epoch')
+plt.plot(val_losses, label='Validation Loss')
+plt.plot(test_losses, label='Test Loss', color='red')
+plt.xlabel('Iteration/Epoch')
 plt.ylabel('Loss')
 plt.title('Loss Curves')
 plt.legend()
@@ -157,9 +156,9 @@ test_indices = test_dataset.indices
 plt.subplot(1, 2, 2)
 plt.scatter(x_numpy[train_indices], y_numpy[train_indices], label='Train Data', color='blue', s=10)
 plt.scatter(x_numpy[val_indices], y_numpy[val_indices], label='Validation Data', color='orange', s=10)
-plt.scatter(x_numpy[test_indices], y_numpy[test_indices], label='Test Data', color='green', s=10)
+plt.scatter(x_numpy[test_indices], y_numpy[test_indices], label='Test Data', color='red', s=10)
 
-x_nums = np.linspace(min(x), max(x), 100, dtype=np.float32)
+x_nums = np.linspace(np.min(x_numpy), np.max(x_numpy), 100, dtype=np.float32)
 with torch.no_grad():
     w = float(model.weight)
     b = float(model.bias)
