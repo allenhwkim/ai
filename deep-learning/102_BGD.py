@@ -1,11 +1,10 @@
 """
-This file demonstrates Stochastic Gradient Descent (SGD) for linear regression. 
+This file demonstrates Batch Gradient Descent (BGD) for linear regression.
 
- - Gradient Descent is an optimization algorithm that updates parameters 
+ - Batch Gradient Descent is an optimization algorithm that updates parameters 
    (w and b) to minimize a loss function (here, Mean Squared Error).
  - In this code, for each epoch, the gradients of the loss with respect to w
-   and b are computed using all data points 
-   (so technically, this is Batch Gradient Descent; if you used one data point at a time, it would be true SGD).
+   and b are computed using all data points (the entire batch).
  - The parameters w and b are updated by moving in the direction opposite to the gradient, 
    scaled by the learning rate.
  - The process is repeated for multiple epochs, and the loss is tracked and plotted.
@@ -28,22 +27,24 @@ learning_rate = 0.1
 losses = []
 w_s, b_s, dw_s, db_s = [], [], [], []
 
-# --- Gradient Descent Loop ---
+# --- Batch Gradient Descent Loop (use all data points per epoch) ---
 for epoch in range(100):
-    # type of errors is np.ndarray
-    errors = (w * x_nums + b) - y_nums # MSE error: (w*x + b) - y
-    loss = np.mean(errors ** 2) 
+    # Compute predictions for all data points
+    y_pred = w * x_nums + b
+    errors = y_pred - y_nums
+    loss = np.mean(errors ** 2)
     losses.append(loss)
 
-    # Compute gradient
+    # Compute gradients using all data points (batch)
     # loss function L = (1/n) * Σ( (w*x + b) - y )^2
     # Similar to standard deviation s = √[ Σ (xi - x̄)² / (n - 1) ]
     # MSE measures the average squared difference between predicted values and actual values.
     # SD measures the spread of the data around its mean (how much the data varies).
     # Derivatives of L/w, dw = (1/n) * Σ(2 * (w*x + b - y) * x)
     # Devivatives of L/b, db = (1/n) * Σ(2 * (w*x + b - y))
-    dw = np.mean(errors * x_nums) * 2.0
-    db = np.mean(errors) * 2.0          
+    dw = 2 * np.mean(errors * x_nums)
+    db = 2 * np.mean(errors)
+
     print(f"w = {w:.4f}\t b = {b:.4f}\t dw = {dw:.4f}\t db = {db:.4f}")
 
     w_s.append(w)
