@@ -128,7 +128,6 @@ for epoch in range(num_epochs):
     val_losses.append(val_loss)  # Store validation loss for plotting
 
 model.eval()  # Set model to evaluation mode
-
 with torch.no_grad():
     test_loss = 0.0
     for x_inputs, y_targets in test_loader:
