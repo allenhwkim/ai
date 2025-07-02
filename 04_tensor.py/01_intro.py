@@ -1,23 +1,25 @@
 """
 A tensor is a multi-dimensional array, similar to NumPy arrays but optimized for GPU acceleration.
+"tensor" comes from the Latin word "tendere," meaning "to stretch." 
+"intense", "tension", "extend", and "tendency" are all derived from the same root.
 
-PyTorch is a popular open-source machine learning library that provides a flexible and efficient way to work with tensors.
+Tensors comes from physics, where it is used to represent physical quantities that have both magnitude and direction.
+
+https://phys.libretexts.org/@api/deki/files/3862/clipboard_efc45921bb2c4eaff288d52f56acbe7c8?revision=1&size=bestfit&width=575&height=335
+Scalar: A single number, represented as a 0D tensor. 50 m
+Vector: A one-dimensional array of numbers, represented as a 1D tensor. 
+  e.g. [5.0, 0.0] m/s (5 m/s in the x-direction, 0 m/s in the y-direction)
+Matrix: A two-dimensional array of numbers, represented as a 2D tensor.
+  e.g. [ [2.1, 0.0], [0.0, 0.0] ] m/s^2 (acceleration in the x, y directions)
+    x-acceleration(to the east) caused by x, y [2.1, 0.0], 
+    y-acceleration(to the north/south) caused by x, y motion [0, 0],
+
+To work with tensors, PyTorch is used, a popular open-source machine learning library.
 
 # PyTorch Tensors: Introduction and Basic Operations
 This code provides an introduction to PyTorch tensors, covering their creation, basic operations, properties,
 and conversion between NumPy arrays and PyTorch tensors. It also includes examples of reshaping tensors
 and performing basic autograd operations for gradient computation.
-
-Tensors comes from physics, where it is used to represent physical quantities that have both magnitude and direction.
-
-Scalar: A single number, represented as a 0D tensor. 10,000 m
-Vector: A one-dimensional array of numbers, represented as a 1D tensor. 
-  e.g. [100, 0, 2] m/s (100 m/s in the x-direction, 0 m/s in the y-direction, and 2 m/s in the z-direction)
-Matrix: A two-dimensional array of numbers, represented as a 2D tensor.
-  e.g. [ [0.5, 0, 0.1], [0, 0, 0], [0.1, 0, 0.2] ] m/s^2 (acceleration in the x, y, and z directions)
-    x-acceleration(to the east) caused by x, y, z motion [0.5, 0, 0.1], 
-    y-acceleration(to the north/south) caused by x, y, z motion [0, 0, 0],
-    z-acceleration(to the up/down) caused by x, y, z motion [0.1, 0, 0.2]
 """
 
 import torch
