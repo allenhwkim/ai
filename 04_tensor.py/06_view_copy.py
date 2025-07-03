@@ -37,7 +37,7 @@ print(y.requires_grad)  # True, as y is derived
 z = y.sum() # tensor(12., grad_fn=<SumBackward0>)
 print(z)  # tensor(12., grad_fn=<SumBackward0>)
 z.backward() # Compute gradients with backward()
-print("\nGradient of x (dz/dx):\n", x.grad) # tensor([2., 2.]), as dz/dx = 2 for each element
+print(x.grad) # Gradient tensor([2., 2.]), as dz/dx = 2 for each element
 detached_x = x.detach()
 print(detached_x) # tensor([2., 3.]) # no requires_grad
 
